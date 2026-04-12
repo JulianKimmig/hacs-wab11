@@ -1,0 +1,10 @@
+{
+  "domain": "wab11",
+  "name": "wab11",
+  "documentation": "https://github.com/JulianKimmig/wab11",
+  "issue_tracker": "https://github.com/JulianKimmig/wab11/issues",
+  "dependencies": [],
+  "config_flow": true,
+  "codeowners": ["@JulianKimmig"],
+  "requirements": []
+}
