@@ -1,1 +1,1 @@
-"""Tests for wab11 integration."""
+"""Tests for hacs_wab11 integration."""
