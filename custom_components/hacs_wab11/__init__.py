@@ -36,6 +36,8 @@ from .coordinator import (
     Wab11RuntimeData,
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 def _get_platforms(entry: ConfigEntry) -> list[Platform]:
     """Return the platforms enabled for a config entry.

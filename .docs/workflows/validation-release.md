@@ -50,7 +50,10 @@ All three validation workflows run on every pull request and on pushes to
    files.
 3. [`hassfest.yaml`](../../.github/workflows/hassfest.yaml) runs Home
    Assistant's Hassfest action, which validates integration metadata and
-   Home Assistant repository conventions.
+   Home Assistant repository conventions. In particular, the manifest keeps
+   `domain` and `name` first and all remaining keys alphabetical, and the
+   integration declares its config-entry-only YAML schema because it exposes
+   `async_setup` for service registration.
 
 The HACS-facing inputs to those checks include
 [`hacs.json`](../../hacs.json),

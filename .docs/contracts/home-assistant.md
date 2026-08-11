@@ -46,7 +46,10 @@ entry after it changes.
 | `enable_advanced_sensors` | `false`       | Creates the four advanced heat-pump temperature sensors               |
 
 There is no YAML configuration path and no automatic discovery path in the
-current integration.
+current integration. The module-level `CONFIG_SCHEMA` uses Home Assistant's
+`config_entry_only_config_schema` helper: an empty YAML configuration remains
+valid, while a `hacs_wab11:` YAML section is logged as unsupported so the user
+is directed to remove it.
 
 ## Entity contract
 
