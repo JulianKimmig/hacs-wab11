@@ -11,7 +11,7 @@ This document records the externally observable contract implemented by the
 - Display name: `Weishaupt WAB11`
 - Integration type: local-polling hub
 - Minimum Home Assistant version declared in `hacs.json`: `2025.1.0`
-- Runtime dependency: `wab11==0.1.0`
+- Runtime dependency: `wab11==0.2.0`
 - Config-flow version: `1`
 - Device identifier: `(hacs_wab11, "<host>:<port>:<unit_id>")`
 - Entity unique ID: `"<config-entry unique ID>_<entity key>"`
@@ -20,38 +20,60 @@ This document records the externally observable contract implemented by the
 
 The user flow accepts the following config-entry data.
 
-| Field     | Required | Default/constraint        | Meaning                                                                       |
-| --------- | -------- | ------------------------- | ----------------------------------------------------------------------------- |
-| `name`    | No       | String                    | Optional config-entry/device name; the host is used as the title when omitted |
-| `host`    | Yes      | String                    | Controller host or IP address                                                 |
-| `port`    | Yes      | `502`; integer `1..65535` | Modbus TCP port                                                               |
-| `unit_id` | Yes      | `1`; integer `1..255`     | Modbus unit identifier                                                        |
+| Field                | Required | Default/constraint                        | Meaning                                                                       |
+| -------------------- | -------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
+| `name`               | No       | String                                    | Optional config-entry/device name; the host is used as the title when omitted |
+| `host`               | Yes      | String                                    | Controller host or IP address                                                 |
+| `port`               | Yes      | `502`; integer `1..65535`                 | Modbus TCP port                                                               |
+| `unit_id`            | Yes      | `1`; integer `1..255`                     | Modbus unit identifier                                                        |
+| `n_heating_circuits` | No       | Integer `1..5`; omitted means auto-detect | Number of sequential heating-circuit register blocks                          |
 
-Before entry creation, the integration constructs a five-heating-circuit
-`WAB11Client`, performs `sync()`, and disconnects it in all outcomes. The
-config-entry unique ID is `<host>:<port>:<unit_id>`, so Home Assistant rejects a
-second entry with the same connection coordinates. Library connectivity and
-timeout errors map to `cannot_connect`, validation errors to `invalid_config`,
-and other library or unexpected errors to `unknown`.
+Before entry creation, the integration constructs a `WAB11Client`, performs
+`sync()`, and disconnects it in all outcomes. An explicit count is forwarded
+unchanged. If the field is omitted, the library auto-detects sequential circuit
+blocks up to five. Validation then persists the resulting positive integer as
+`n_heating_circuits` in config-entry data in both cases. The library's exact
+end-of-list and error-propagation rules are defined in the base package's
+[`heating-circuit discovery contract`](../../../../.docs/contracts/heating-circuit-discovery.md).
+
+The config-entry unique ID remains `<host>:<port>:<unit_id>` and does not
+include the circuit count, so Home Assistant rejects a second entry with the
+same connection coordinates. Library connectivity and timeout errors map to
+`cannot_connect`, validation errors to `invalid_config`, and other library or
+unexpected errors to `unknown`.
 
 The options flow stores a complete option set and its update listener asks Home
 Assistant's config-entry manager to reload the entry after it changes. The
 manager owns the unload/setup state transitions; the listener does not invoke
 the lifecycle functions directly.
 
-| Option                    | Default       | Constraint/effect                                                     |
-| ------------------------- | ------------- | --------------------------------------------------------------------- |
-| `main_scan_interval`      | `15` seconds  | Integer, minimum `5`; schedules main state polling                    |
-| `energy_scan_interval`    | `300` seconds | Integer, minimum `60`; schedules energy polling                       |
-| `enable_write_entities`   | `false`       | Loads select, number, and button platforms and permits runtime writes |
-| `enable_energy_sensors`   | `true`        | Creates the three energy-total sensors                                |
-| `enable_advanced_sensors` | `false`       | Creates the four advanced heat-pump temperature sensors               |
+| Option                    | Default                      | Constraint/effect                                                                          |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------ |
+| `n_heating_circuits`      | Persisted config-entry value | Required integer `1..5`; overrides the detected/manual setup value after options are saved |
+| `main_scan_interval`      | `15` seconds                 | Integer, minimum `5`; schedules main state polling                                         |
+| `energy_scan_interval`    | `300` seconds                | Integer, minimum `60`; schedules energy polling                                            |
+| `enable_write_entities`   | `false`                      | Loads select, number, and button platforms and permits runtime writes                      |
+| `enable_energy_sensors`   | `true`                       | Creates the three energy-total sensors                                                     |
+| `enable_advanced_sensors` | `false`                      | Creates the four advanced heat-pump temperature sensors                                    |
 
-There is no YAML configuration path and no automatic discovery path in the
-current integration. The module-level `CONFIG_SCHEMA` uses Home Assistant's
+There is no YAML configuration path and no Home Assistant network/device
+discovery source. The module-level `CONFIG_SCHEMA` uses Home Assistant's
 `config_entry_only_config_schema` helper: an empty YAML configuration remains
 valid, while a `hacs_wab11:` YAML section is logged as unsupported so the user
 is directed to remove it.
+
+At runtime, the options value takes precedence over config-entry data. For a
+current entry, setup passes that effective integer explicitly to `Wab11Runtime`
+and its `WAB11Client`. Changing the option reloads the entry, so manual
+adjustments take effect on a newly constructed client without re-running
+automatic detection.
+
+For compatibility, an older entry that has neither the data field nor an
+option passes `None` and auto-detects in its initial runtime refresh. While that
+entry is loaded, the options form uses the resulting runtime collection length
+as its editable default; it falls back to five only when no stored, overridden,
+or loaded detected value is available. Saving the options persists an explicit
+runtime count for subsequent reloads.
 
 ## Entity contract
 
@@ -111,9 +133,10 @@ checks the same option again before every operation.
   30-minute push and cancel a push respectively.
 
 Changing a write entity invokes the matching curated `wab11` client method and
-publishes the returned main snapshot immediately. The integration assumes at
-most five heating circuits and only creates circuit-specific entities for
-circuits whose library model reports `is_configured`.
+publishes the returned main snapshot immediately. The effective selected or
+detected count limits the runtime model collection to sequential circuits
+`1..N`; the integration only creates circuit-specific entities among them
+whose library model reports `is_configured`.
 
 ## Service contract
 

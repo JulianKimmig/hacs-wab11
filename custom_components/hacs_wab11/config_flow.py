@@ -20,6 +20,7 @@ from .const import (
     CONF_ENABLE_WRITE_ENTITIES,
     CONF_ENERGY_SCAN_INTERVAL,
     CONF_MAIN_SCAN_INTERVAL,
+    CONF_N_HEATING_CIRCUITS,
     CONF_UNIT_ID,
     DEFAULT_ENABLE_ADVANCED_SENSORS,
     DEFAULT_ENABLE_ENERGY_SENSORS,
@@ -40,20 +41,23 @@ def _entry_unique_id(data: dict[str, Any]) -> str:
     return f"{data[CONF_HOST]}:{data[CONF_PORT]}:{data[CONF_UNIT_ID]}"
 
 
-async def async_validate_input(data: dict[str, Any]) -> dict[str, str]:
+async def async_validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input by connecting to the controller."""
     client = WAB11Client(
         data[CONF_HOST],
         port=data[CONF_PORT],
         unit_id=data[CONF_UNIT_ID],
-        n_heating_circuits=5,
+        n_heating_circuits=data.get(CONF_N_HEATING_CIRCUITS),
     )
     try:
         await client.sync()
     finally:
         await client.disconnect()
 
-    return {"title": data.get(CONF_NAME) or data[CONF_HOST]}
+    return {
+        "title": data.get(CONF_NAME) or data[CONF_HOST],
+        CONF_N_HEATING_CIRCUITS: len(client.heating_circuits),
+    }
 
 
 class Wab11ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
@@ -82,6 +86,7 @@ class Wab11ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
                 _LOGGER.exception("Unexpected exception while validating WAB11 config")
                 errors["base"] = "unknown"
             else:
+                user_input[CONF_N_HEATING_CIRCUITS] = info[CONF_N_HEATING_CIRCUITS]
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,
@@ -98,6 +103,10 @@ class Wab11ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
                 vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
                     vol.Coerce(int),
                     vol.Range(min=1, max=255),
+                ),
+                vol.Optional(CONF_N_HEATING_CIRCUITS): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=1, max=5),
                 ),
             }
         )
@@ -129,8 +138,20 @@ class Wab11OptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         options = self.config_entry.options
+        detected_count = self.config_entry.data.get(CONF_N_HEATING_CIRCUITS)
+        if detected_count is None and self.config_entry.runtime_data is not None:
+            detected_count = len(
+                self.config_entry.runtime_data.runtime.client.heating_circuits
+            )
         schema = vol.Schema(
             {
+                vol.Required(
+                    CONF_N_HEATING_CIRCUITS,
+                    default=options.get(
+                        CONF_N_HEATING_CIRCUITS,
+                        detected_count or 5,
+                    ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=5)),
                 vol.Required(
                     CONF_MAIN_SCAN_INTERVAL,
                     default=options.get(

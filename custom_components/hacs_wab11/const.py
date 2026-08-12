@@ -10,7 +10,7 @@ NAME: Final = "Weishaupt WAB11"
 DOMAIN: Final = "hacs_wab11"
 MANUFACTURER: Final = "Weishaupt"
 MODEL: Final = "WAB11"
-VERSION: Final = "0.1.0"
+VERSION: Final = "0.2.0"
 
 PLATFORMS: tuple[Platform, ...] = (
     Platform.SENSOR,
@@ -28,6 +28,7 @@ DATA_ENERGY_COORDINATOR: Final = "energy_coordinator"
 DATA_PLATFORMS: Final = "platforms"
 
 CONF_UNIT_ID = "unit_id"
+CONF_N_HEATING_CIRCUITS = "n_heating_circuits"
 CONF_MAIN_SCAN_INTERVAL = "main_scan_interval"
 CONF_ENERGY_SCAN_INTERVAL = "energy_scan_interval"
 CONF_ENABLE_WRITE_ENTITIES = "enable_write_entities"

@@ -8,7 +8,8 @@
           "name": "Name",
           "host": "Host",
           "port": "Port",
-          "unit_id": "Unit ID"
+          "unit_id": "Unit ID",
+          "n_heating_circuits": "Heating circuits (leave empty to auto-detect)"
         }
       }
     },
@@ -28,6 +29,7 @@
         "data": {
           "main_scan_interval": "Main scan interval (seconds)",
           "energy_scan_interval": "Energy scan interval (seconds)",
+          "n_heating_circuits": "Heating circuits",
           "enable_write_entities": "Enable write entities",
           "enable_energy_sensors": "Enable energy sensors",
           "enable_advanced_sensors": "Enable advanced sensors"

@@ -5,7 +5,7 @@ Weishaupt WAB11 controller. The integration domain is `hacs_wab11`; Home
 Assistant loads it from
 [`custom_components/hacs_wab11`](../custom_components/hacs_wab11/), while
 [`manifest.json`](../custom_components/hacs_wab11/manifest.json) declares it as
-a local-polling hub with a config flow and a pinned `wab11==0.1.0` dependency.
+a local-polling hub with a config flow and a pinned `wab11==0.2.0` dependency.
 
 ## Runtime boundaries
 
@@ -24,6 +24,19 @@ loaded entry receives one
 [`Wab11RuntimeData`](../custom_components/hacs_wab11/coordinator.py) object in
 `entry.runtime_data`. It contains the client wrapper, both coordinators, and
 the exact platform list forwarded for that entry.
+
+The config flow is the discovery boundary for new entries. A user may supply a
+heating-circuit count from one through five. When the field is omitted,
+validation lets the `wab11` client auto-detect sequential controller blocks.
+Either result is persisted in config-entry data. The options flow exposes an
+editable count override, and normal entry setup passes the effective persisted
+integer to the runtime. Consequently, periodic polling and reloads of new
+entries never repeat register-block discovery. For compatibility, an older
+entry without the field passes `None` and detects during runtime; its options
+form derives the editable default from the loaded client so saving the options
+makes later runtimes explicit. The library-level detection invariant is owned
+by the base package's
+[`heating-circuit discovery contract`](../../../.docs/contracts/heating-circuit-discovery.md).
 
 [`Wab11Runtime`](../custom_components/hacs_wab11/coordinator.py) is the only
 integration layer that calls the standalone library client. Its single
@@ -47,8 +60,9 @@ entry. Successful unload disconnects only after all forwarded platforms unload.
 The sensor and binary-sensor platforms are always forwarded. Select, number,
 and button platforms are forwarded only when the `enable_write_entities`
 option is true. Sensor creation is further controlled by the energy and
-advanced-sensor options; heating-circuit entities are created only for circuits
-reported as configured in the first main snapshot.
+advanced-sensor options. The persisted count bounds which sequential circuit
+models the runtime reads; heating-circuit entities are then created only for
+models reported as configured in the first main snapshot.
 
 All entities derive from
 [`Wab11CoordinatorEntity`](../custom_components/hacs_wab11/entity.py). This
