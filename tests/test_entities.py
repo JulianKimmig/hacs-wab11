@@ -95,12 +95,18 @@ async def test_entities_expose_state_from_library_models(
     sensor_component = hass.data[SENSOR_COMPONENT]
     outdoor = sensor_component.get_entity("sensor.wab11_test_outdoor_temperature")
     room = sensor_component.get_entity("sensor.wab11_test_hk1_room_temperature")
+    humidity = sensor_component.get_entity("sensor.wab11_test_hk1_room_humidity")
+    heat_pump_request = sensor_component.get_entity(
+        "sensor.wab11_test_heat_pump_power_request"
+    )
     energy = sensor_component.get_entity("sensor.wab11_test_total_energy_today")
     setpoint = sensor_component.get_entity(
         "sensor.wab11_test_hot_water_effective_setpoint"
     )
     assert outdoor is not None and outdoor.force_update
     assert room is not None and room.force_update
+    assert humidity is not None and humidity.force_update
+    assert heat_pump_request is not None and heat_pump_request.force_update
     assert energy is not None and not energy.force_update
     assert setpoint is not None and not setpoint.force_update
 

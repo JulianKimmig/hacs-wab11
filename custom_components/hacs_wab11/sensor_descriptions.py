@@ -71,6 +71,7 @@ TEMP = {
 }
 MEASURED_TEMP = {**TEMP, "force_update": True}
 PERCENT = {"native_unit": PERCENTAGE}
+MEASURED_PERCENT = {**PERCENT, "force_update": True}
 
 
 SYSTEM_SENSORS = (
@@ -136,7 +137,7 @@ HEAT_PUMP_SENSORS = (
         key="heat_pump_power_request",
         name="Heat pump power request",
         path="heat_pump.power_request_percent",
-        **PERCENT,
+        **MEASURED_PERCENT,
     ),
     Wab11SensorDescription(
         key="heat_pump_evaporator_temperature",
