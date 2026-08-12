@@ -175,4 +175,7 @@ async def test_options_flow_updates_runtime_options(
 
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
+    assert entry.runtime_data.runtime.main_scan_interval == 25
+    assert entry.runtime_data.runtime.energy_scan_interval == 900
+    assert entry.runtime_data.runtime.write_entities_enabled is True
     assert await hass.config_entries.async_unload(entry.entry_id)

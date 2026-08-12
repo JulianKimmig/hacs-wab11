@@ -34,8 +34,10 @@ second entry with the same connection coordinates. Library connectivity and
 timeout errors map to `cannot_connect`, validation errors to `invalid_config`,
 and other library or unexpected errors to `unknown`.
 
-The options flow stores a complete option set and Home Assistant reloads the
-entry after it changes.
+The options flow stores a complete option set and its update listener asks Home
+Assistant's config-entry manager to reload the entry after it changes. The
+manager owns the unload/setup state transitions; the listener does not invoke
+the lifecycle functions directly.
 
 | Option                    | Default       | Constraint/effect                                                     |
 | ------------------------- | ------------- | --------------------------------------------------------------------- |

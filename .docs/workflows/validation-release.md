@@ -7,7 +7,10 @@ in [`../ARCHITECTURE.md`](../ARCHITECTURE.md) and
 
 ## Local validation
 
-The repository targets Python 3.13 for its CI/Home Assistant test stack.
+The repository targets Python 3.13 for its CI/Home Assistant test stack. Local
+environments used to investigate lifecycle behavior must also use Python 3.13
+and be freshly resolved from `requirements_test.txt`; reusing a Python 3.12
+environment can retain an older Home Assistant config-entry state machine.
 [`requirements_test.txt`](../../requirements_test.txt) installs the Home
 Assistant custom-component test plugin and the same `wab11==0.1.0` version
 pinned by the component manifest. The commands mirrored by CI are:
