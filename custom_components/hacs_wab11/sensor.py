@@ -5,15 +5,28 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import CONF_ENABLE_ADVANCED_SENSORS, CONF_ENABLE_ENERGY_SENSORS
 from .coordinator import Wab11RuntimeData
 from .entity import Wab11CoordinatorEntity
+from .sensor_circuit_descriptions import heating_circuit_sensors
+from .sensor_descriptions import (
+    ENERGY_SENSORS,
+    HEAT_PUMP_SENSORS,
+    HOT_WATER_SENSORS,
+    SECONDARY_HEAT_SENSORS,
+    SYSTEM_SENSORS,
+    Wab11SensorDescription,
+)
 
 
 def _enum_name(value: Any) -> str | None:
@@ -41,6 +54,7 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
         device_class: SensorDeviceClass | None = None,
         native_unit: str | None = None,
         options: list[str] | None = None,
+        state_class: SensorStateClass | None = None,
         enabled_default: bool = True,
     ) -> None:
         super().__init__(coordinator, entry, runtime_data, key, name)
@@ -48,6 +62,7 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = native_unit
         self._attr_options = options
+        self._attr_state_class = state_class
         self._attr_entity_registry_enabled_default = enabled_default
 
     @property
@@ -163,86 +178,64 @@ async def async_setup_entry(
         ),
     ]
 
+    descriptions = list(SYSTEM_SENSORS)
+    for circuit in main.data.heating_circuits:
+        if circuit.is_configured:
+            descriptions.extend(heating_circuit_sensors(circuit.circuit_id))
+    descriptions.extend(HOT_WATER_SENSORS)
+    descriptions.extend(SECONDARY_HEAT_SENSORS)
     if options.get(CONF_ENABLE_ADVANCED_SENSORS, False):
-        entities.extend(
-            [
-                Wab11Sensor(
-                    main,
-                    entry,
-                    runtime_data,
-                    key="heat_pump_flow_temperature",
-                    name="Heat pump flow temperature",
-                    value_fn=lambda data: data.heat_pump.flow_temp_b4.celsius,
-                    device_class=SensorDeviceClass.TEMPERATURE,
-                    native_unit=UnitOfTemperature.CELSIUS,
-                ),
-                Wab11Sensor(
-                    main,
-                    entry,
-                    runtime_data,
-                    key="heat_pump_return_temperature",
-                    name="Heat pump return temperature",
-                    value_fn=lambda data: data.heat_pump.return_temp.celsius,
-                    device_class=SensorDeviceClass.TEMPERATURE,
-                    native_unit=UnitOfTemperature.CELSIUS,
-                ),
-                Wab11Sensor(
-                    main,
-                    entry,
-                    runtime_data,
-                    key="heat_pump_buffer_temperature",
-                    name="Heat pump buffer temperature",
-                    value_fn=lambda data: data.heat_pump.buffer_temp_b11.celsius,
-                    device_class=SensorDeviceClass.TEMPERATURE,
-                    native_unit=UnitOfTemperature.CELSIUS,
-                ),
-                Wab11Sensor(
-                    main,
-                    entry,
-                    runtime_data,
-                    key="heat_pump_separator_temperature",
-                    name="Heat pump separator temperature",
-                    value_fn=lambda data: data.heat_pump.separator_temp_b2.celsius,
-                    device_class=SensorDeviceClass.TEMPERATURE,
-                    native_unit=UnitOfTemperature.CELSIUS,
-                ),
-            ]
-        )
-
+        descriptions.extend(HEAT_PUMP_SENSORS)
+        descriptions.extend(_legacy_heat_pump_temperature_descriptions())
     if options.get(CONF_ENABLE_ENERGY_SENSORS, True):
-        entities.extend(
-            [
-                Wab11Sensor(
-                    energy,
-                    entry,
-                    runtime_data,
-                    key="total_energy_today",
-                    name="Total energy today",
-                    value_fn=lambda data: data.total.today,
-                    device_class=SensorDeviceClass.ENERGY,
-                    native_unit=UnitOfEnergy.KILO_WATT_HOUR,
-                ),
-                Wab11Sensor(
-                    energy,
-                    entry,
-                    runtime_data,
-                    key="total_energy_month",
-                    name="Total energy month",
-                    value_fn=lambda data: data.total.month,
-                    device_class=SensorDeviceClass.ENERGY,
-                    native_unit=UnitOfEnergy.KILO_WATT_HOUR,
-                ),
-                Wab11Sensor(
-                    energy,
-                    entry,
-                    runtime_data,
-                    key="total_energy_year",
-                    name="Total energy year",
-                    value_fn=lambda data: data.total.year,
-                    device_class=SensorDeviceClass.ENERGY,
-                    native_unit=UnitOfEnergy.KILO_WATT_HOUR,
-                ),
-            ]
-        )
+        descriptions.extend(ENERGY_SENSORS)
+
+    entities.extend(
+        _sensor_from_description(description, main, energy, entry, runtime_data)
+        for description in descriptions
+    )
 
     async_add_entities(entities)
+
+
+def _sensor_from_description(
+    description: Wab11SensorDescription,
+    main,
+    energy,
+    entry: ConfigEntry,
+    runtime_data: Wab11RuntimeData,
+) -> Wab11Sensor:
+    """Create an entity from a declarative sensor description."""
+    coordinator = energy if description.source == "energy" else main
+    return Wab11Sensor(
+        coordinator,
+        entry,
+        runtime_data,
+        key=description.key,
+        name=description.name,
+        value_fn=description.value,
+        device_class=description.device_class,
+        native_unit=description.native_unit,
+        state_class=description.state_class,
+        enabled_default=description.enabled_default,
+    )
+
+
+def _legacy_heat_pump_temperature_descriptions() -> tuple[Wab11SensorDescription, ...]:
+    """Return existing heat-pump sensor identities for compatibility."""
+    return tuple(
+        Wab11SensorDescription(
+            key=f"heat_pump_{key}_temperature",
+            name=f"Heat pump {name} temperature",
+            path=f"heat_pump.{path}",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit=UnitOfTemperature.CELSIUS,
+            temperature=True,
+        )
+        for key, name, path in (
+            ("flow", "flow", "flow_temp_b4"),
+            ("return", "return", "return_temp"),
+            ("buffer", "buffer", "buffer_temp_b11"),
+            ("separator", "separator", "separator_temp_b2"),
+        )
+    )

@@ -50,44 +50,123 @@ async def async_setup_entry(
     """Set up WAB11 binary sensors."""
     runtime_data = entry.runtime_data
     main = runtime_data.main_coordinator
-    async_add_entities(
-        [
+    entities = [
+        Wab11BinarySensor(
+            main,
+            entry,
+            runtime_data,
+            key="has_error",
+            name="Has error",
+            is_on_fn=lambda data: data.system.has_error,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+        ),
+        Wab11BinarySensor(
+            main,
+            entry,
+            runtime_data,
+            key="has_warning",
+            name="Has warning",
+            is_on_fn=lambda data: data.system.has_warning,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            enabled_default=False,
+        ),
+        Wab11BinarySensor(
+            main,
+            entry,
+            runtime_data,
+            key="secondary_heat_active",
+            name="Secondary heat active",
+            is_on_fn=lambda data: data.secondary_heat.any_backup_active,
+            device_class=BinarySensorDeviceClass.HEAT,
+        ),
+    ]
+
+    for key, name, attribute in (
+        ("system_heating", "System heating", "is_heating"),
+        ("system_cooling", "System cooling", "is_cooling"),
+        ("system_hot_water", "System hot water", "is_hot_water"),
+        ("system_defrosting", "System defrosting", "is_defrosting"),
+        ("system_standby", "System standby", "is_standby"),
+    ):
+        entities.append(
             Wab11BinarySensor(
                 main,
                 entry,
                 runtime_data,
-                key="has_error",
-                name="Has error",
-                is_on_fn=lambda data: data.system.has_error,
-                device_class=BinarySensorDeviceClass.PROBLEM,
-            ),
-            Wab11BinarySensor(
-                main,
-                entry,
-                runtime_data,
-                key="has_warning",
-                name="Has warning",
-                is_on_fn=lambda data: data.system.has_warning,
-                device_class=BinarySensorDeviceClass.PROBLEM,
+                key=key,
+                name=name,
+                is_on_fn=lambda data, attribute=attribute: getattr(
+                    data.system, attribute
+                ),
+                device_class=BinarySensorDeviceClass.RUNNING,
                 enabled_default=False,
-            ),
+            )
+        )
+
+    for key, name, attribute in (
+        ("heat_pump_error_free", "Heat pump error free", "is_error_free"),
+        ("heat_pump_running", "Heat pump running", "is_running"),
+        ("heat_pump_heating", "Heat pump heating", "is_heating"),
+        ("heat_pump_cooling", "Heat pump cooling", "is_cooling"),
+        ("heat_pump_defrosting", "Heat pump defrosting", "is_defrosting"),
+        ("heat_pump_hot_water", "Heat pump hot water", "is_hot_water"),
+        ("heat_pump_quiet", "Heat pump quiet mode", "is_quiet_mode"),
+    ):
+        entities.append(
             Wab11BinarySensor(
                 main,
                 entry,
                 runtime_data,
-                key="hot_water_charging",
-                name="Hot water charging",
-                is_on_fn=lambda data: data.hot_water.is_charging,
-                device_class=BinarySensorDeviceClass.HEAT,
-            ),
+                key=key,
+                name=name,
+                is_on_fn=lambda data, attribute=attribute: getattr(
+                    data.heat_pump, attribute
+                ),
+                device_class=BinarySensorDeviceClass.RUNNING,
+                enabled_default=key == "heat_pump_running",
+            )
+        )
+
+    for key, name, attribute in (
+        ("wez2_active", "Second heat source active", "is_wez2_active"),
+        ("electric_heater_1", "Electric heater 1 active", "is_e1_active"),
+        ("electric_heater_2", "Electric heater 2 active", "is_e2_active"),
+    ):
+        entities.append(
             Wab11BinarySensor(
                 main,
                 entry,
                 runtime_data,
-                key="secondary_heat_active",
-                name="Secondary heat active",
-                is_on_fn=lambda data: data.secondary_heat.any_backup_active,
+                key=key,
+                name=name,
+                is_on_fn=lambda data, attribute=attribute: getattr(
+                    data.secondary_heat, attribute
+                ),
                 device_class=BinarySensorDeviceClass.HEAT,
-            ),
-        ]
-    )
+            )
+        )
+
+    for key, name, attribute in (
+        ("sg_ready_1", "SG-Ready input 1", "sg_ready_1"),
+        ("sg_ready_2", "SG-Ready input 2", "sg_ready_2"),
+        ("input_h12", "Input H1.2", "input_h12"),
+        ("input_h13", "Input H1.3", "input_h13"),
+        ("input_h14", "Input H1.4", "input_h14"),
+        ("input_h15", "Input H1.5", "input_h15"),
+        ("input_de1", "Input DE1", "input_de1"),
+        ("input_de2", "Input DE2", "input_de2"),
+    ):
+        entities.append(
+            Wab11BinarySensor(
+                main,
+                entry,
+                runtime_data,
+                key=key,
+                name=name,
+                is_on_fn=lambda data, attribute=attribute: getattr(
+                    data.inputs, attribute
+                ),
+            )
+        )
+
+    async_add_entities(entities)

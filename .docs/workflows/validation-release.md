@@ -43,6 +43,18 @@ effective persisted value. The upstream probing and Modbus exception-code
 rules are tested in the base package and documented in its
 [`heating-circuit discovery contract`](../../../../.docs/contracts/heating-circuit-discovery.md).
 
+Expanded read-surface coverage lives in
+[`tests/test_entities.py`](../../tests/test_entities.py). It sets up the real
+Home Assistant platforms against the register-backed library client and checks
+representative system, configured-circuit, hot-water, heat-pump,
+secondary-heat, digital-input, and energy states. When the entity surface
+changes, validate its complete declarative inventory against
+[`sensor_descriptions.py`](../../custom_components/hacs_wab11/sensor_descriptions.py),
+[`sensor_circuit_descriptions.py`](../../custom_components/hacs_wab11/sensor_circuit_descriptions.py),
+and [`binary_sensor.py`](../../custom_components/hacs_wab11/binary_sensor.py),
+and keep the root [`variables reference`](../../../../docs/variables-reference.md)
+aligned.
+
 `requirements_dev.txt` adds Home Assistant, Ruff, and mypy for broader local
 development. The repository also has a separate
 [`pre-commit configuration`](../../.pre-commit-config.yaml) for file hygiene,
