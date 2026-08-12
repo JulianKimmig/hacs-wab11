@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Weishaupt WAB11",
+        "description": "Konfiguriere eine WAB11-Wärmepumpe über Modbus TCP. Diese Integration sollte nur in einem direkten oder isolierten Netzwerksegment verwendet werden.",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port",
+          "unit_id": "Unit-ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur WAB11-Steuerung fehlgeschlagen.",
+      "invalid_config": "Die angegebene Konfiguration ist ungültig.",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "abort": {
+      "already_configured": "Diese WAB11-Steuerung ist bereits konfiguriert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weishaupt WAB11 Optionen",
+        "data": {
+          "main_scan_interval": "Haupt-Abfrageintervall (Sekunden)",
+          "energy_scan_interval": "Energie-Abfrageintervall (Sekunden)",
+          "enable_write_entities": "Schreib-Entitäten aktivieren",
+          "enable_energy_sensors": "Energiesensoren aktivieren",
+          "enable_advanced_sensors": "Erweiterte Sensoren aktivieren"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_party_pause": {
+      "name": "Party/Pause setzen",
+      "description": "Aktiviert Party- oder Pause-Modus für einen Heizkreis.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Config-Entry-ID. Erforderlich, wenn mehrere WAB11-Integrationen konfiguriert sind."
+        },
+        "circuit": {
+          "name": "Heizkreis"
+        },
+        "mode": {
+          "name": "Modus"
+        },
+        "hours": {
+          "name": "Dauer"
+        }
+      }
+    },
+    "cancel_party_pause": {
+      "name": "Party/Pause abbrechen",
+      "description": "Setzt den Party-/Pause-Modus eines Heizkreises zurück.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Config-Entry-ID. Erforderlich, wenn mehrere WAB11-Integrationen konfiguriert sind."
+        },
+        "circuit": {
+          "name": "Heizkreis"
+        }
+      }
+    },
+    "trigger_hot_water_push": {
+      "name": "Warmwasser-Push starten",
+      "description": "Startet einen Warmwasser-Push mit der gewünschten Dauer.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Config-Entry-ID. Erforderlich, wenn mehrere WAB11-Integrationen konfiguriert sind."
+        },
+        "minutes": {
+          "name": "Minuten"
+        }
+      }
+    },
+    "cancel_hot_water_push": {
+      "name": "Warmwasser-Push abbrechen",
+      "description": "Beendet einen aktiven Warmwasser-Push.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry-ID",
+          "description": "Config-Entry-ID. Erforderlich, wenn mehrere WAB11-Integrationen konfiguriert sind."
+        }
+      }
+    }
+  }
+}

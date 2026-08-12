@@ -1,0 +1,13 @@
+{
+  "domain": "hacs_wab11",
+  "name": "Weishaupt WAB11",
+  "codeowners": ["@JulianKimmig"],
+  "config_flow": true,
+  "documentation": "https://github.com/JulianKimmig/hacs-wab11",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/JulianKimmig/hacs-wab11/issues",
+  "loggers": ["wab11"],
+  "requirements": ["wab11==0.1.0"],
+  "version": "0.1.0"
+}

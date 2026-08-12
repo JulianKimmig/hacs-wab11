@@ -1,96 +1,99 @@
-# wab11
+# Weishaupt WAB11
 
-[![GitHub Release][releases-shield]][releases]
-[![GitHub Activity][commits-shield]][commits]
-[![License][license-shield]](LICENSE)
+Home Assistant custom integration for Weishaupt WAB11 heat pumps over Modbus TCP. It is structured for HACS installation and uses the standalone [`wab11`](https://github.com/JulianKimmig/wab11) Python library as its dependency.
 
-[![pre-commit][pre-commit-shield]][pre-commit]
-[![Black][black-shield]][black]
+## Safety
 
-[![hacs][hacsbadge]][hacs]
-[![Project Maintenance][maintenance-shield]][user_profile]
-[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
+The WAB11 Modbus TCP interface is unencrypted. Use it only on a direct or isolated network segment, not on a general home LAN or any exposed network.
 
-[![Discord][discord-shield]][discord]
-[![Community Forum][forum-shield]][forum]
-
-**TO BE REMOVED: If you need help, as a developer, to use this custom component tempalte,
-please look at the [User Guide in the Cookiecutter documentation](https://cookiecutter-homeassistant-custom-component.readthedocs.io/en/stable/quickstart.html)**
-
-**This component will set up the following platforms.**
-
-| Platform        | Description                                                               |
-| --------------- | ------------------------------------------------------------------------- |
-| `binary_sensor` | Show something `True` or `False`.                                         |
-| `sensor`        | Show info from wab11 API. |
-| `switch`        | Switch something `True` or `False`.                                       |
-
-![example][exampleimg]
+Write entities are disabled by default. The first release scope intentionally exposes only documented user-level controls such as system mode, heating-circuit modes, curated setpoints, party/pause, and hot-water push.
 
 ## Installation
 
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `wab11`.
-4. Download _all_ the files from the `custom_components/wab11/` directory (folder) in this repository.
-5. Place the files you downloaded in the new directory (folder) you created.
-6. Restart Home Assistant
-7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "wab11"
+1. Open HACS in Home Assistant.
+2. Add this repository as a custom repository with type `Integration`.
+3. Install `Weishaupt WAB11`.
+4. Restart Home Assistant.
+5. Add the integration from `Settings -> Devices & services`.
 
-Using your HA configuration directory (folder) as a starting point you should now also have this:
+The integration installs the published `wab11==0.1.0` library from PyPI and requires Home Assistant 2025.1.0 or newer.
 
-```text
-custom_components/wab11/translations/en.json
-custom_components/wab11/translations/fr.json
-custom_components/wab11/translations/nb.json
-custom_components/wab11/translations/sensor.en.json
-custom_components/wab11/translations/sensor.fr.json
-custom_components/wab11/translations/sensor.nb.json
-custom_components/wab11/translations/sensor.nb.json
-custom_components/wab11/__init__.py
-custom_components/wab11/api.py
-custom_components/wab11/binary_sensor.py
-custom_components/wab11/config_flow.py
-custom_components/wab11/const.py
-custom_components/wab11/manifest.json
-custom_components/wab11/sensor.py
-custom_components/wab11/switch.py
+## Configuration
+
+The config flow asks for:
+
+- Host or IP address
+- Port, default `502`
+- Unit ID, default `1`
+
+The options flow lets you change:
+
+- Main polling interval
+- Energy polling interval
+- Whether write entities are enabled
+- Whether energy sensors are enabled
+- Whether advanced sensors are enabled
+
+## Entity Scope
+
+Read-only entities include:
+
+- Outdoor temperature
+- Operating state
+- Error and warning code sensors
+- Hot-water temperature
+- SG-Ready state
+- Secondary-heat activity
+- Optional advanced heat-pump temperatures
+- Optional energy totals
+
+Writable entities include:
+
+- `select` for system mode and configured heating-circuit modes
+- `number` for heating-circuit setpoints
+- `number` for hot-water setpoints and push duration
+- `button` for triggering or cancelling hot-water push
+
+Custom service actions:
+
+- `hacs_wab11.set_party_pause`
+- `hacs_wab11.cancel_party_pause`
+- `hacs_wab11.trigger_hot_water_push`
+- `hacs_wab11.cancel_hot_water_push`
+
+## Data Updates
+
+The main controller state is polled every 15 seconds by default. Energy statistics are polled every 300 seconds by default. Both intervals can be increased in the integration options. When the controller is temporarily unavailable, Home Assistant marks coordinator entities unavailable and retries on the next scheduled update.
+
+## Known Limitations
+
+- Communication uses unauthenticated, unencrypted Modbus TCP and must remain on an isolated network.
+- Automatic network discovery is not available; the controller address must be entered manually.
+- The integration models up to five heating circuits and only creates circuit entities for circuits reported as configured.
+- Write controls are intentionally disabled until explicitly enabled in the integration options.
+
+## Troubleshooting
+
+- Confirm Home Assistant can reach the controller host and TCP port `502` from its own network namespace.
+- Confirm the configured Modbus Unit ID, which defaults to `1`.
+- If entities become unavailable, check the Home Assistant log for `hacs_wab11` and `wab11` messages, then verify the isolated network path to the controller.
+- If write entities are missing, enable them in `Settings -> Devices & services -> Weishaupt WAB11 -> Configure`.
+
+## Removal
+
+Remove the config entry from `Settings -> Devices & services`, then uninstall `Weishaupt WAB11` in HACS. Restart Home Assistant after HACS removes the custom component files.
+
+## Development
+
+Use Python `3.13` to match the CI and Home Assistant test stack.
+
+```bash
+python -m pip install -r requirements_test.txt
+pytest
+ruff check .
+mypy --ignore-missing-imports custom_components/hacs_wab11
 ```
 
-## Configuration is done in the UI
+## Repository Notes
 
-<!---->
-
-## Contributions are welcome!
-
-If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
-
-## Credits
-
-This project was generated from [@oncleben31](https://github.com/oncleben31)'s [Home Assistant Custom Component Cookiecutter](https://github.com/oncleben31/cookiecutter-homeassistant-custom-component) template.
-
-Code template was mainly taken from [@Ludeeus](https://github.com/ludeeus)'s [integration_blueprint][integration_blueprint] template
-
----
-
-[integration_blueprint]: https://github.com/custom-components/integration_blueprint
-[black]: https://github.com/psf/black
-[black-shield]: https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge
-[buymecoffee]: https://www.buymeacoffee.com/JulianKimmig
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/JulianKimmig/wab11.svg?style=for-the-badge
-[commits]: https://github.com/JulianKimmig/wab11/commits/main
-[hacs]: https://hacs.xyz
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[discord]: https://discord.gg/Qa5fW2R
-[discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
-[exampleimg]: example.png
-[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
-[forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/JulianKimmig/wab11.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-%40JulianKimmig-blue.svg?style=for-the-badge
-[pre-commit]: https://github.com/pre-commit/pre-commit
-[pre-commit-shield]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/JulianKimmig/wab11.svg?style=for-the-badge
-[releases]: https://github.com/JulianKimmig/wab11/releases
-[user_profile]: https://github.com/JulianKimmig
+The HACS workflow ignores GitHub repository description and topic checks because those are GitHub-side settings, not files inside the repository. Set the repo description/topics before removing that ignore if you want to prepare for inclusion in the default HACS catalog.

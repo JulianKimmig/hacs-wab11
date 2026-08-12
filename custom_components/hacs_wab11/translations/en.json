@@ -1,0 +1,95 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Weishaupt WAB11",
+        "description": "Configure a WAB11 heat pump controller over Modbus TCP. Only use this integration on a direct or isolated network segment.",
+        "data": {
+          "name": "Name",
+          "host": "Host",
+          "port": "Port",
+          "unit_id": "Unit ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the WAB11 controller.",
+      "invalid_config": "The provided configuration is invalid.",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This WAB11 controller is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weishaupt WAB11 options",
+        "data": {
+          "main_scan_interval": "Main scan interval (seconds)",
+          "energy_scan_interval": "Energy scan interval (seconds)",
+          "enable_write_entities": "Enable write entities",
+          "enable_energy_sensors": "Enable energy sensors",
+          "enable_advanced_sensors": "Enable advanced sensors"
+        }
+      }
+    }
+  },
+  "services": {
+    "set_party_pause": {
+      "name": "Set party or pause mode",
+      "description": "Activate party or pause mode for a heating circuit.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Config entry ID. Required if multiple WAB11 integrations are configured."
+        },
+        "circuit": {
+          "name": "Heating circuit"
+        },
+        "mode": {
+          "name": "Mode"
+        },
+        "hours": {
+          "name": "Duration"
+        }
+      }
+    },
+    "cancel_party_pause": {
+      "name": "Cancel party or pause mode",
+      "description": "Reset party or pause mode for a heating circuit.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Config entry ID. Required if multiple WAB11 integrations are configured."
+        },
+        "circuit": {
+          "name": "Heating circuit"
+        }
+      }
+    },
+    "trigger_hot_water_push": {
+      "name": "Trigger hot water push",
+      "description": "Start a hot-water push cycle.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Config entry ID. Required if multiple WAB11 integrations are configured."
+        },
+        "minutes": {
+          "name": "Minutes"
+        }
+      }
+    },
+    "cancel_hot_water_push": {
+      "name": "Cancel hot water push",
+      "description": "Stop an active hot-water push cycle.",
+      "fields": {
+        "entry_id": {
+          "name": "Entry ID",
+          "description": "Config entry ID. Required if multiple WAB11 integrations are configured."
+        }
+      }
+    }
+  }
+}
