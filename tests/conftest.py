@@ -44,7 +44,6 @@ def load_custom_integrations(enable_custom_integrations: None) -> None:
     Returns:
         None.
     """
-    return None
 
 
 class ConfigBackedFakeConnection:
@@ -67,7 +66,7 @@ class ConfigBackedFakeConnection:
         self.read_error: WAB11Error | None = None
 
     @classmethod
-    def from_config(cls, config: dict[str, Any]) -> "ConfigBackedFakeConnection":
+    def from_config(cls, config: dict[str, Any]) -> ConfigBackedFakeConnection:
         register_blocks = config["register_blocks"]
         return cls(
             input_blocks={

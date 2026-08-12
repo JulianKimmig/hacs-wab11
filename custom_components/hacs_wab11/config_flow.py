@@ -107,7 +107,7 @@ class Wab11ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore
     @callback
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
-    ) -> "Wab11OptionsFlow":
+    ) -> Wab11OptionsFlow:
         """Create the options flow for a config entry.
 
         Args:
