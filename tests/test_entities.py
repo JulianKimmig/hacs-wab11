@@ -52,6 +52,26 @@ async def test_entities_expose_state_from_library_models(
     assert hass.states.get("sensor.wab11_test_sg_ready_state").state == "recommended"
     assert hass.states.get("sensor.wab11_test_total_energy_today").state == "12.0"
     assert hass.states.get("sensor.wab11_test_total_energy_year").state == "1240.0"
+    assert hass.states.get("sensor.wab11_test_outdoor_temperature_2").state == "4.2"
+    assert hass.states.get("sensor.wab11_test_hk1_room_temperature").state == "20.8"
+    assert hass.states.get("sensor.wab11_test_hk2_flow_temperature").state == "29.6"
+    assert (
+        hass.states.get("sensor.wab11_test_hot_water_effective_setpoint").state
+        == "50.0"
+    )
+    assert hass.states.get("sensor.wab11_test_heat_pump_power_request").state == "47"
+    assert (
+        hass.states.get("sensor.wab11_test_second_heat_source_operating_hours").state
+        == "1200"
+    )
+    assert (
+        hass.states.get("sensor.wab11_test_bivalence_temperature_heating").state
+        == "-5.0"
+    )
+    assert hass.states.get("sensor.wab11_test_heating_energy_yesterday").state == "8.0"
+    assert hass.states.get("binary_sensor.wab11_test_input_h1_2").state == "on"
+    assert hass.states.get("binary_sensor.wab11_test_heat_pump_running").state == "on"
+    assert hass.states.get("binary_sensor.wab11_test_hot_water_charging") is None
     assert (
         hass.states.get("sensor.wab11_test_heat_pump_flow_temperature").state == "33.2"
     )

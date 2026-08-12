@@ -81,38 +81,88 @@ All entities are coordinator-backed, grouped under the entry's single WAB11
 device, and use entity names composed by Home Assistant from the configured
 device name and the names below.
 
-### Baseline read entities
+### Always-created sensors
 
-Sensors:
+These sensors use the main coordinator. “Disabled” means the entity is created
+in the registry but disabled by default.
 
-| Entity key              | Name                  | State                                                                       |
-| ----------------------- | --------------------- | --------------------------------------------------------------------------- |
-| `outdoor_temperature`   | Outdoor temperature   | Celsius temperature                                                         |
-| `operating_state`       | Operating state       | Lowercase WAB11 operating-state enum name                                   |
-| `error_code`            | Error code            | Integer code; raw sentinel `65535` becomes unavailable                      |
-| `warning_code`          | Warning code          | Integer code; raw sentinel `65535` becomes unavailable; disabled by default |
-| `hot_water_temperature` | Hot water temperature | Celsius temperature                                                         |
-| `sg_ready_state`        | SG-Ready state        | `normal`, `evu_lock`, `recommended`, or `maximum`                           |
+| Group                      | Entity keys                                                                                                | State / default                                                             |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| System                     | `outdoor_temperature`, `outdoor_temperature_2`                                                             | Primary and secondary Celsius readings                                      |
+| System                     | `operating_state`                                                                                          | Lowercase `OperatingState` enum name                                        |
+| System                     | `error_code`, `warning_code`                                                                               | Integer code; `65535` becomes unavailable; warning disabled                 |
+| System                     | `power_request`                                                                                            | System power request in W                                                   |
+| Hot water                  | `hot_water_temperature`, `hot_water_effective_setpoint`                                                    | Current and effective target temperatures in °C                             |
+| Hot water                  | `hot_water_sg_ready_boost`, `hot_water_temperature_difference`                                             | SG boost and target-minus-current difference in K                           |
+| Hot water diagnostics      | `hot_water_config`                                                                                         | Lowercase configuration enum; disabled                                      |
+| Inputs                     | `sg_ready_state`                                                                                           | `normal`, `evu_lock`, `recommended`, or `maximum`                           |
+| Secondary heat             | `wez2_status`, `wez2_operating_hours`, `wez2_switching_cycles`, `e1_operating_hours`, `e2_operating_hours` | Synchronized status/counters; hours/cycles use total-increasing state class |
+| Secondary heat             | `secondary_heat_limit_temperature`, `bivalence_temperature_heating`, `bivalence_temperature_hot_water`     | Synchronized °C thresholds                                                  |
+| Secondary heat derived     | `secondary_heat_total_operating_hours`                                                                     | Sum of WEZ2, E1, and E2 hours; total-increasing                             |
+| Secondary heat diagnostics | `config_wez2`, `config_e1`, `config_e2`                                                                    | Synchronized integer configuration codes; disabled                          |
 
-Binary sensors:
+Each selected circuit whose synchronized `config` is not `NOT_CONFIGURED`
+adds the following 13 sensors. Replace `N` with its one-based circuit number.
 
-| Entity key              | Name                  | State/default                        |
-| ----------------------- | --------------------- | ------------------------------------ |
-| `has_error`             | Has error             | Problem boolean                      |
-| `has_warning`           | Has warning           | Problem boolean; disabled by default |
-| `hot_water_charging`    | Hot water charging    | Heat-active boolean                  |
-| `secondary_heat_active` | Secondary heat active | Heat-active boolean                  |
+| Entity-key template                                                                                                | State / default                                                       |
+| ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| `hkN_room_effective_setpoint`, `hkN_room_temperature`, `hkN_flow_setpoint`, `hkN_flow_temperature`                 | Synchronized °C values                                                |
+| `hkN_room_humidity`                                                                                                | Synchronized percentage; unavailable when the library value is `None` |
+| `hkN_heating_curve`                                                                                                | Synchronized integer heating-curve value                              |
+| `hkN_summer_winter_threshold`                                                                                      | Synchronized integer exposed with the current °C unit metadata        |
+| `hkN_constant_temperature_heating`, `hkN_constant_temperature_heating_setback`, `hkN_constant_temperature_cooling` | Synchronized °C values                                                |
+| `hkN_config`, `hkN_request_type`                                                                                   | Lowercase synchronized enum names; disabled                           |
+| `hkN_party_pause`                                                                                                  | Synchronized encoded party/pause integer; disabled                    |
 
-### Optional read entities
+### Always-created binary sensors
 
-When `enable_advanced_sensors` is true, the main coordinator supplies Celsius
-sensors with keys `heat_pump_flow_temperature`,
-`heat_pump_return_temperature`, `heat_pump_buffer_temperature`, and
-`heat_pump_separator_temperature`.
+| Entity keys                                                                                                                        | Source / default                                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `has_error`, `has_warning`                                                                                                         | Derived from synchronized system codes; warning disabled                   |
+| `secondary_heat_active`, `wez2_active`, `electric_heater_1`, `electric_heater_2`                                                   | Derived from synchronized secondary-heat status and configuration; enabled |
+| `sg_ready_1`, `sg_ready_2`, `input_h12`, `input_h13`, `input_h14`, `input_h15`, `input_de1`, `input_de2`                           | Synchronized digital input states; enabled                                 |
+| `heat_pump_running`                                                                                                                | Derived from synchronized heat-pump power request; enabled                 |
+| `heat_pump_error_free`, `heat_pump_heating`, `heat_pump_cooling`, `heat_pump_defrosting`, `heat_pump_hot_water`, `heat_pump_quiet` | Synchronized or derived heat-pump state; disabled                          |
+| `system_heating`, `system_cooling`, `system_hot_water`, `system_defrosting`, `system_standby`                                      | Derived from synchronized system operating state; disabled                 |
 
-When `enable_energy_sensors` is true, the energy coordinator supplies kWh
-sensors with keys `total_energy_today`, `total_energy_month`, and
-`total_energy_year`.
+### Option-gated sensors
+
+When `enable_advanced_sensors` is true, the integration creates the full
+synchronized heat-pump surface:
+
+- Temperatures in °C: `heat_pump_flow_temperature`,
+  `heat_pump_return_temperature`, `heat_pump_buffer_temperature`,
+  `heat_pump_separator_temperature`, `heat_pump_evaporator_temperature`,
+  `heat_pump_suction_gas_temperature`,
+  `heat_pump_regenerative_flow_temperature`, and
+  `heat_pump_sum_flow_temperature`.
+- `heat_pump_operating_state` (lowercase enum),
+  `heat_pump_power_request` (%), `heat_pump_temperature_spread` (K), and
+  `heat_pump_power_heating`, `heat_pump_power_cooling`,
+  `heat_pump_power_hot_water`, `heat_pump_power_defrost` (%).
+- Disabled diagnostics/configuration sensors: `heat_pump_config`,
+  `heat_pump_quiet_mode`, `heat_pump_start_mode`,
+  `heat_pump_flow_rate_heating`, `heat_pump_flow_rate_cooling`, and
+  `heat_pump_flow_rate_hot_water`.
+
+When `enable_energy_sensors` is true (the default), all 16 synchronized kWh
+values are exposed using `<category>_energy_<period>` keys, where category is
+`total`, `heating`, `hot_water`, or `cooling` and period is `today`,
+`yesterday`, `month`, or `year`. They use the energy coordinator and a
+total-increasing state class.
+
+### Deliberately unexposed model defaults
+
+The integration does not expose `HeatingCircuit.status` or derived circuit
+heating/cooling binary sensors, `HotWaterState.status` or a hot-water-charging
+binary sensor, or `InputsState.config_*` configuration sensors. Those model
+fields are not populated by the current `wab11` synchronization path; exposing
+their defaults would report invented controller state. They remain visible in
+diagnostics as model data, but must not be interpreted as synchronized values.
+
+The exhaustive register/model/entity mapping, including units and raw
+addresses, is in the root
+[`variables reference`](../../../../docs/variables-reference.md).
 
 ### Opt-in write entities
 
@@ -171,3 +221,9 @@ become enum names, and dataclasses/collections are traversed. This behavior is
 implemented by
 [`diagnostics.py`](../../custom_components/hacs_wab11/diagnostics.py) and
 exercised by [`test_diagnostics.py`](../../tests/test_diagnostics.py).
+
+Diagnostics serialize the complete library snapshot, including model fields
+that currently retain library defaults because no synchronization path reads
+them. In particular, heating-circuit status, hot-water status, and input
+configuration values in diagnostics are not evidence of controller state and
+are deliberately not exposed as entities.

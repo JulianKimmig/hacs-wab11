@@ -64,6 +64,17 @@ advanced-sensor options. The persisted count bounds which sequential circuit
 models the runtime reads; heating-circuit entities are then created only for
 models reported as configured in the first main snapshot.
 
+The read surface is declarative. [`sensor.py`](../custom_components/hacs_wab11/sensor.py)
+owns coordinator selection and entity construction;
+[`sensor_descriptions.py`](../custom_components/hacs_wab11/sensor_descriptions.py)
+owns system, hot-water, heat-pump, secondary-heat, and energy mappings; and
+[`sensor_circuit_descriptions.py`](../custom_components/hacs_wab11/sensor_circuit_descriptions.py)
+generates the repeated configured-circuit mappings. Descriptions expose only
+values populated by the current library synchronizers, plus derived properties
+whose inputs are populated. Model placeholders that are not synchronized—such
+as heating-circuit status, hot-water status, and digital-input configuration
+fields—are intentionally not entity sources.
+
 All entities derive from
 [`Wab11CoordinatorEntity`](../custom_components/hacs_wab11/entity.py). This
 base binds availability and update handling to a coordinator, assigns all
@@ -76,6 +87,8 @@ The complete user-visible surface and option-dependent entity inventory are
 recorded in the
 [`Home Assistant contract`](contracts/home-assistant.md). Module, metadata, and
 test ownership are mapped in [`code-relationships.md`](code-relationships.md).
+The cross-package register/model/entity mapping is maintained in the root
+[`variables reference`](../../../docs/variables-reference.md).
 
 ## Supporting boundaries
 
