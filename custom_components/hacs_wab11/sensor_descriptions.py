@@ -29,6 +29,7 @@ class Wab11SensorDescription:
         state_class: Optional long-term-statistics state class.
         enum: Whether the resolved value is represented by an enum name.
         temperature: Whether the resolved value is a library Temperature.
+        force_update: Whether unchanged values are written on every coordinator update.
         enabled_default: Whether the entity is enabled by default.
     """
 
@@ -41,6 +42,7 @@ class Wab11SensorDescription:
     state_class: SensorStateClass | None = None
     enum: bool = False
     temperature: bool = False
+    force_update: bool = False
     enabled_default: bool = True
 
     def value(self, data: Any) -> Any:
@@ -67,7 +69,9 @@ TEMP = {
     "native_unit": UnitOfTemperature.CELSIUS,
     "temperature": True,
 }
+MEASURED_TEMP = {**TEMP, "force_update": True}
 PERCENT = {"native_unit": PERCENTAGE}
+MEASURED_PERCENT = {**PERCENT, "force_update": True}
 
 
 SYSTEM_SENSORS = (
@@ -75,7 +79,7 @@ SYSTEM_SENSORS = (
         key="outdoor_temperature_2",
         name="Outdoor temperature 2",
         path="system.outdoor_temp_2",
-        **TEMP,
+        **MEASURED_TEMP,
     ),
     Wab11SensorDescription(
         key="power_request",
@@ -133,31 +137,31 @@ HEAT_PUMP_SENSORS = (
         key="heat_pump_power_request",
         name="Heat pump power request",
         path="heat_pump.power_request_percent",
-        **PERCENT,
+        **MEASURED_PERCENT,
     ),
     Wab11SensorDescription(
         key="heat_pump_evaporator_temperature",
         name="Heat pump evaporator temperature",
         path="heat_pump.evaporator_temp",
-        **TEMP,
+        **MEASURED_TEMP,
     ),
     Wab11SensorDescription(
         key="heat_pump_suction_gas_temperature",
         name="Heat pump suction gas temperature",
         path="heat_pump.suction_gas_temp",
-        **TEMP,
+        **MEASURED_TEMP,
     ),
     Wab11SensorDescription(
         key="heat_pump_regenerative_flow_temperature",
         name="Heat pump regenerative flow temperature",
         path="heat_pump.regenerative_flow_b21",
-        **TEMP,
+        **MEASURED_TEMP,
     ),
     Wab11SensorDescription(
         key="heat_pump_sum_flow_temperature",
         name="Heat pump sum flow temperature",
         path="heat_pump.sum_flow_b7",
-        **TEMP,
+        **MEASURED_TEMP,
     ),
     Wab11SensorDescription(
         key="heat_pump_temperature_spread",

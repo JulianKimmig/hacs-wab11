@@ -55,6 +55,7 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
         native_unit: str | None = None,
         options: list[str] | None = None,
         state_class: SensorStateClass | None = None,
+        force_update: bool = False,
         enabled_default: bool = True,
     ) -> None:
         super().__init__(coordinator, entry, runtime_data, key, name)
@@ -63,6 +64,7 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = native_unit
         self._attr_options = options
         self._attr_state_class = state_class
+        self._attr_force_update = force_update
         self._attr_entity_registry_enabled_default = enabled_default
 
     @property
@@ -91,6 +93,7 @@ async def async_setup_entry(
             value_fn=lambda data: data.system.outdoor_temp,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit=UnitOfTemperature.CELSIUS,
+            force_update=True,
         ),
         Wab11Sensor(
             main,
@@ -165,6 +168,7 @@ async def async_setup_entry(
             value_fn=lambda data: data.hot_water.current_temp,
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit=UnitOfTemperature.CELSIUS,
+            force_update=True,
         ),
         Wab11Sensor(
             main,
@@ -217,6 +221,7 @@ def _sensor_from_description(
         device_class=description.device_class,
         native_unit=description.native_unit,
         state_class=description.state_class,
+        force_update=description.force_update,
         enabled_default=description.enabled_default,
     )
 
@@ -230,6 +235,7 @@ def _legacy_heat_pump_temperature_descriptions() -> tuple[Wab11SensorDescription
             path=f"heat_pump.{path}",
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit=UnitOfTemperature.CELSIUS,
+            force_update=True,
             temperature=True,
         )
         for key, name, path in (

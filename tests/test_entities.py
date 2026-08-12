@@ -7,6 +7,7 @@ from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.number import SERVICE_SET_VALUE
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.select import SERVICE_SELECT_OPTION
+from homeassistant.components.sensor import DATA_COMPONENT as SENSOR_COMPONENT
 from homeassistant.const import ATTR_ENTITY_ID
 from wab11.registers.definitions import ALL_REGISTERS
 from wab11.registers.formats import FormatCodec
@@ -90,6 +91,24 @@ async def test_entities_expose_state_from_library_models(
     assert hass.states.get("button.wab11_test_trigger_hot_water_push") is not None
     assert hass.states.get("button.wab11_test_cancel_hot_water_push") is not None
     assert hass.states.get("select.wab11_test_hk3_mode") is None
+
+    sensor_component = hass.data[SENSOR_COMPONENT]
+    outdoor = sensor_component.get_entity("sensor.wab11_test_outdoor_temperature")
+    room = sensor_component.get_entity("sensor.wab11_test_hk1_room_temperature")
+    humidity = sensor_component.get_entity("sensor.wab11_test_hk1_room_humidity")
+    heat_pump_request = sensor_component.get_entity(
+        "sensor.wab11_test_heat_pump_power_request"
+    )
+    energy = sensor_component.get_entity("sensor.wab11_test_total_energy_today")
+    setpoint = sensor_component.get_entity(
+        "sensor.wab11_test_hot_water_effective_setpoint"
+    )
+    assert outdoor is not None and outdoor.force_update
+    assert room is not None and room.force_update
+    assert humidity is not None and humidity.force_update
+    assert heat_pump_request is not None and heat_pump_request.force_update
+    assert energy is not None and not energy.force_update
+    assert setpoint is not None and not setpoint.force_update
 
 
 async def test_write_entities_call_through_to_the_library(

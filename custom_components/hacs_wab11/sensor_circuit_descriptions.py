@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from homeassistant.const import UnitOfTemperature
 
-from .sensor_descriptions import PERCENT, TEMP, Wab11SensorDescription
+from .sensor_descriptions import (
+    MEASURED_PERCENT,
+    MEASURED_TEMP,
+    TEMP,
+    Wab11SensorDescription,
+)
 
 
 def heating_circuit_sensors(circuit_id: int) -> tuple[Wab11SensorDescription, ...]:
@@ -37,13 +42,13 @@ def heating_circuit_sensors(circuit_id: int) -> tuple[Wab11SensorDescription, ..
             key=f"{prefix}_room_temperature",
             name=f"{label} room temperature",
             path=f"{base}.room_temp",
-            **TEMP,
+            **MEASURED_TEMP,
         ),
         Wab11SensorDescription(
             key=f"{prefix}_room_humidity",
             name=f"{label} room humidity",
             path=f"{base}.room_humidity",
-            **PERCENT,
+            **MEASURED_PERCENT,
         ),
         Wab11SensorDescription(
             key=f"{prefix}_flow_setpoint",
@@ -55,7 +60,7 @@ def heating_circuit_sensors(circuit_id: int) -> tuple[Wab11SensorDescription, ..
             key=f"{prefix}_flow_temperature",
             name=f"{label} flow temperature",
             path=f"{base}.flow_temp",
-            **TEMP,
+            **MEASURED_TEMP,
         ),
         Wab11SensorDescription(
             key=f"{prefix}_request_type",
