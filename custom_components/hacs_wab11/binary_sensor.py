@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import Wab11RuntimeData
+from .coordinator import Wab11MainData, Wab11RuntimeData
 from .entity import Wab11CoordinatorEntity
 
 
@@ -40,6 +40,24 @@ class Wab11BinarySensor(Wab11CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         return self._is_on_fn(self.coordinator.data)
+
+
+def _nested_bool(section: str, attribute: str) -> Callable[[Wab11MainData], bool]:
+    """Build a typed accessor for a boolean nested model attribute.
+
+    Args:
+        section: Attribute name of the model section in main coordinator data.
+        attribute: Boolean field or property name within that section.
+
+    Returns:
+        A typed callable that resolves the requested boolean value.
+    """
+
+    def value_fn(data: Wab11MainData) -> bool:
+        """Resolve the configured nested boolean attribute."""
+        return bool(getattr(getattr(data, section), attribute))
+
+    return value_fn
 
 
 async def async_setup_entry(
@@ -95,9 +113,7 @@ async def async_setup_entry(
                 runtime_data,
                 key=key,
                 name=name,
-                is_on_fn=lambda data, attribute=attribute: getattr(
-                    data.system, attribute
-                ),
+                is_on_fn=_nested_bool("system", attribute),
                 device_class=BinarySensorDeviceClass.RUNNING,
                 enabled_default=False,
             )
@@ -119,9 +135,7 @@ async def async_setup_entry(
                 runtime_data,
                 key=key,
                 name=name,
-                is_on_fn=lambda data, attribute=attribute: getattr(
-                    data.heat_pump, attribute
-                ),
+                is_on_fn=_nested_bool("heat_pump", attribute),
                 device_class=BinarySensorDeviceClass.RUNNING,
                 enabled_default=key == "heat_pump_running",
             )
@@ -139,9 +153,7 @@ async def async_setup_entry(
                 runtime_data,
                 key=key,
                 name=name,
-                is_on_fn=lambda data, attribute=attribute: getattr(
-                    data.secondary_heat, attribute
-                ),
+                is_on_fn=_nested_bool("secondary_heat", attribute),
                 device_class=BinarySensorDeviceClass.HEAT,
             )
         )
@@ -163,9 +175,7 @@ async def async_setup_entry(
                 runtime_data,
                 key=key,
                 name=name,
-                is_on_fn=lambda data, attribute=attribute: getattr(
-                    data.inputs, attribute
-                ),
+                is_on_fn=_nested_bool("inputs", attribute),
             )
         )
 
