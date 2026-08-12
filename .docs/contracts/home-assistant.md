@@ -176,6 +176,21 @@ values are exposed using `<category>_energy_<period>` keys, where category is
 `yesterday`, `month`, or `year`. They use the energy coordinator and a
 total-increasing state class.
 
+The same option creates `estimated_total_power`, a derived power sensor in W
+with device class `POWER`, state class `MEASUREMENT`, and `force_update=true`.
+It is unavailable until two change points establish a positive-energy
+interval. Its per-entry estimator uses only `total_energy_today` and
+`total_energy_yesterday`—never `heat_pump_power_request`—and reports the
+unweighted average slope across at most four recent energy-change boundaries.
+An unchanged counter holds the prior estimate. A single next-day reset
+is unwrapped using the completed yesterday total. Negative/non-finite counters,
+same-day decreases, non-increasing timestamps, and gaps of more than one day
+discard the estimate. Valid discontinuities establish a new baseline
+immediately; after an invalid counter, the next valid sample does so. See
+[`power_estimator.py`](../../custom_components/hacs_wab11/power_estimator.py),
+[`test_power_estimator.py`](../../tests/test_power_estimator.py), and the entity
+coverage in [`test_entities.py`](../../tests/test_entities.py).
+
 ### Deliberately unexposed model defaults
 
 The integration does not expose `HeatingCircuit.status` or derived circuit

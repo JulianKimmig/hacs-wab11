@@ -50,7 +50,12 @@ through the main coordinator.
 
 The main coordinator polls at the configured main interval and translates
 `WAB11Error` into Home Assistant `UpdateFailed`. The energy coordinator does
-the same on its independent, slower interval. Initial setup refreshes main
+the same on its independent, slower interval and owns a per-entry
+[`EnergyPowerEstimator`](../custom_components/hacs_wab11/power_estimator.py).
+That estimator derives average power solely from the synchronized total-energy
+today/yesterday counters; it does not consume heat-pump power request. The
+energy coordinator always dispatches successful samples so held estimates can
+be published even when the energy snapshot compares equal. Initial setup refreshes main
 state before forwarding platforms and also requests an energy refresh. A main
 refresh failure disconnects the client and leaves Home Assistant to retry the
 entry. Successful unload disconnects only after all forwarded platforms unload.

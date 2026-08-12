@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/JulianKimmig/hacs-wab11/issues",
   "loggers": ["wab11"],
   "requirements": ["wab11==0.2.0"],
-  "version": "0.3.0"
+  "version": "0.4.0"
 }
