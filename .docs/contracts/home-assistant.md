@@ -81,6 +81,26 @@ All entities are coordinator-backed, grouped under the entry's single WAB11
 device, and use entity names composed by Home Assistant from the configured
 device name and the names below.
 
+### Recorder updates for measured temperatures
+
+Physical temperature measurements set Home Assistant `force_update` to true.
+Recorder therefore receives a state update on every corresponding coordinator
+update even when the numeric temperature is unchanged. This applies to primary
+and secondary outdoor temperature, each circuit's measured room and flow
+temperature, current hot-water temperature, and every physical heat-pump
+temperature (including the four legacy heat-pump entity identities).
+
+Temperature targets and settings do not use `force_update`: effective and flow
+setpoints, thresholds, constant-temperature settings, boosts, and derived
+temperature differences/spreads retain Home Assistant's default false value.
+Configuration/diagnostic sensors and cumulative energy sensors also remain
+false. [`test_entities.py`](../../tests/test_entities.py) verifies representative
+measured-temperature, energy, and effective-setpoint behavior; the selection is
+owned by [`sensor.py`](../../custom_components/hacs_wab11/sensor.py),
+[`sensor_descriptions.py`](../../custom_components/hacs_wab11/sensor_descriptions.py),
+and
+[`sensor_circuit_descriptions.py`](../../custom_components/hacs_wab11/sensor_circuit_descriptions.py).
+
 ### Always-created sensors
 
 These sensors use the main coordinator. “Disabled” means the entity is created
