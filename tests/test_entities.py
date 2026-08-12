@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+from datetime import datetime, timedelta, timezone
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.number import SERVICE_SET_VALUE
@@ -70,6 +73,10 @@ async def test_entities_expose_state_from_library_models(
         == "-5.0"
     )
     assert hass.states.get("sensor.wab11_test_heating_energy_yesterday").state == "8.0"
+    assert (
+        hass.states.get("sensor.wab11_test_estimated_total_power").state
+        == "unavailable"
+    )
     assert hass.states.get("binary_sensor.wab11_test_input_h1_2").state == "on"
     assert hass.states.get("binary_sensor.wab11_test_heat_pump_running").state == "on"
     assert hass.states.get("binary_sensor.wab11_test_hot_water_charging") is None
@@ -103,12 +110,29 @@ async def test_entities_expose_state_from_library_models(
     setpoint = sensor_component.get_entity(
         "sensor.wab11_test_hot_water_effective_setpoint"
     )
+    estimated_power = sensor_component.get_entity(
+        "sensor.wab11_test_estimated_total_power"
+    )
     assert outdoor is not None and outdoor.force_update
     assert room is not None and room.force_update
     assert humidity is not None and humidity.force_update
     assert heat_pump_request is not None and heat_pump_request.force_update
     assert energy is not None and not energy.force_update
     assert setpoint is not None and not setpoint.force_update
+    assert estimated_power is not None and estimated_power.force_update
+
+    sampled_at = datetime(2026, 8, 12, 10, tzinfo=timezone.utc)
+    energy_data = deepcopy(entry.runtime_data.energy_coordinator.data)
+    entry.runtime_data.energy_coordinator.power_estimator.update(
+        energy_data, sampled_at
+    )
+    energy_data.total.today += 1
+    entry.runtime_data.energy_coordinator.power_estimator.update(
+        energy_data, sampled_at + timedelta(hours=1)
+    )
+    entry.runtime_data.energy_coordinator.async_set_updated_data(energy_data)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.wab11_test_estimated_total_power").state == "1000.0"
 
 
 async def test_write_entities_call_through_to_the_library(

@@ -13,6 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 from wab11 import HeatingCircuitMode, SystemMode, WAB11Client
 from wab11.exceptions import WAB11Error
 from wab11.models.energy import EnergyStatistics
@@ -24,6 +25,7 @@ from wab11.models.secondary_heat import SecondaryHeatSourceState
 from wab11.models.system import SystemState
 
 from .const import DOMAIN
+from .power_estimator import EnergyPowerEstimator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -228,18 +230,21 @@ class Wab11EnergyCoordinator(DataUpdateCoordinator[EnergyStatistics]):
             None.
         """
         self.runtime = runtime
+        self.power_estimator = EnergyPowerEstimator()
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=f"{DOMAIN}_{runtime.device_identifier}_energy",
             update_interval=timedelta(seconds=runtime.energy_scan_interval),
-            always_update=False,
+            always_update=True,
         )
 
     async def _async_update_data(self) -> EnergyStatistics:
         try:
-            return await self.runtime.async_refresh_energy()
+            statistics = await self.runtime.async_refresh_energy()
+            self.power_estimator.update(statistics, dt_util.now())
+            return statistics
         except WAB11Error as err:
             raise UpdateFailed(str(err)) from err
 

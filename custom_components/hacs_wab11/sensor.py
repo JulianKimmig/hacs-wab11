@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -51,6 +51,7 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
         key: str,
         name: str,
         value_fn: Callable[[Any], Any],
+        available_fn: Callable[[Any], bool] | None = None,
         device_class: SensorDeviceClass | None = None,
         native_unit: str | None = None,
         options: list[str] | None = None,
@@ -60,6 +61,7 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
     ) -> None:
         super().__init__(coordinator, entry, runtime_data, key, name)
         self._value_fn = value_fn
+        self._available_fn = available_fn
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = native_unit
         self._attr_options = options
@@ -70,6 +72,13 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> Any:
         return self._value_fn(self.coordinator.data)
+
+    @property
+    def available(self) -> bool:
+        """Return whether the coordinator and sensor value are available."""
+        return super().available and (
+            self._available_fn is None or self._available_fn(self.coordinator.data)
+        )
 
 
 async def async_setup_entry(
@@ -193,6 +202,23 @@ async def async_setup_entry(
         descriptions.extend(_legacy_heat_pump_temperature_descriptions())
     if options.get(CONF_ENABLE_ENERGY_SENSORS, True):
         descriptions.extend(ENERGY_SENSORS)
+        entities.append(
+            Wab11Sensor(
+                energy,
+                entry,
+                runtime_data,
+                key="estimated_total_power",
+                name="Estimated total power",
+                value_fn=lambda _: energy.power_estimator.estimated_power_watts,
+                available_fn=lambda _: (
+                    energy.power_estimator.estimated_power_watts is not None
+                ),
+                device_class=SensorDeviceClass.POWER,
+                native_unit=UnitOfPower.WATT,
+                state_class=SensorStateClass.MEASUREMENT,
+                force_update=True,
+            )
+        )
 
     entities.extend(
         _sensor_from_description(description, main, energy, entry, runtime_data)
