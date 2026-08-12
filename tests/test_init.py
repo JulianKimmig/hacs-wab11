@@ -12,6 +12,7 @@ from custom_components.hacs_wab11.const import (
     CONF_ENABLE_ADVANCED_SENSORS,
     CONF_ENABLE_ENERGY_SENSORS,
     CONF_ENABLE_WRITE_ENTITIES,
+    CONF_N_HEATING_CIRCUITS,
 )
 
 
@@ -86,6 +87,23 @@ async def test_read_only_setup_only_loads_read_entities(
     assert "select.wab11_test_system_mode" not in entity_ids
     assert "number.wab11_test_hk1_comfort_setpoint" not in entity_ids
     assert "button.wab11_test_trigger_hot_water_push" not in entity_ids
+
+
+async def test_setup_uses_configured_heating_circuit_count(
+    hass,
+    integration_data,
+    integration_options,
+    make_mock_config_entry,
+) -> None:
+    """Pass the persisted circuit count into the runtime library client."""
+    integration_data[CONF_N_HEATING_CIRCUITS] = 3
+    entry = make_mock_config_entry(integration_data, options=integration_options)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(entry.runtime_data.runtime.client.heating_circuits) == 3
 
 
 async def test_setup_retries_and_disconnects_after_device_failure(

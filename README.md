@@ -16,7 +16,7 @@ Write entities are disabled by default. The first release scope intentionally ex
 4. Restart Home Assistant.
 5. Add the integration from `Settings -> Devices & services`.
 
-The integration installs the published `wab11==0.1.0` library from PyPI and requires Home Assistant 2025.1.0 or newer.
+The integration installs the published `wab11==0.2.0` library from PyPI and requires Home Assistant 2025.1.0 or newer.
 
 ## Configuration
 

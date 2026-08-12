@@ -50,6 +50,7 @@ class Wab11Runtime:
         host: str,
         port: int,
         unit_id: int,
+        n_heating_circuits: int | None,
         main_scan_interval: int,
         energy_scan_interval: int,
         write_entities_enabled: bool,
@@ -58,6 +59,7 @@ class Wab11Runtime:
         self.host = host
         self.port = port
         self.unit_id = unit_id
+        self.n_heating_circuits = n_heating_circuits
         self.device_identifier = f"{host}:{port}:{unit_id}"
         self.main_scan_interval = main_scan_interval
         self.energy_scan_interval = energy_scan_interval
@@ -66,7 +68,7 @@ class Wab11Runtime:
             host,
             port=port,
             unit_id=unit_id,
-            n_heating_circuits=5,
+            n_heating_circuits=n_heating_circuits,
         )
         self._lock = asyncio.Lock()
 

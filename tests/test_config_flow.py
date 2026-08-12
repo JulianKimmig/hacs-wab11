@@ -16,6 +16,7 @@ from custom_components.hacs_wab11.const import (
     CONF_ENABLE_WRITE_ENTITIES,
     CONF_ENERGY_SCAN_INTERVAL,
     CONF_MAIN_SCAN_INTERVAL,
+    CONF_N_HEATING_CIRCUITS,
     DOMAIN,
 )
 
@@ -57,8 +58,46 @@ async def test_successful_config_flow(hass, integration_data):
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == integration_data[CONF_NAME]
-    assert result["data"] == integration_data
+    assert result["data"] == {**integration_data, CONF_N_HEATING_CIRCUITS: 5}
     assert result["result"].unique_id == "192.0.2.15:502:1"
+
+
+async def test_config_flow_accepts_manual_heating_circuit_count(
+    hass,
+    integration_data,
+) -> None:
+    """Persist an explicit heating-circuit count without replacing it."""
+    integration_data[CONF_N_HEATING_CIRCUITS] = 3
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=integration_data,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_N_HEATING_CIRCUITS] == 3
+
+
+async def test_config_flow_persists_auto_detected_heating_circuit_count(
+    hass,
+    integration_data,
+) -> None:
+    """Persist the detected count when the optional field is omitted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=integration_data,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_N_HEATING_CIRCUITS] == 5
 
 
 async def test_config_flow_rejects_duplicate_entry(
@@ -159,6 +198,7 @@ async def test_options_flow_updates_runtime_options(
     assert result["step_id"] == "init"
 
     updated_options = {
+        CONF_N_HEATING_CIRCUITS: 3,
         CONF_MAIN_SCAN_INTERVAL: 25,
         CONF_ENERGY_SCAN_INTERVAL: 900,
         CONF_ENABLE_WRITE_ENTITIES: True,
@@ -178,4 +218,5 @@ async def test_options_flow_updates_runtime_options(
     assert entry.runtime_data.runtime.main_scan_interval == 25
     assert entry.runtime_data.runtime.energy_scan_interval == 900
     assert entry.runtime_data.runtime.write_entities_enabled is True
+    assert len(entry.runtime_data.runtime.client.heating_circuits) == 3
     assert await hass.config_entries.async_unload(entry.entry_id)

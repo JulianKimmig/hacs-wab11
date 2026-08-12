@@ -8,7 +8,8 @@
           "name": "Name",
           "host": "Host",
           "port": "Port",
-          "unit_id": "Unit-ID"
+          "unit_id": "Unit-ID",
+          "n_heating_circuits": "Heizkreise (leer lassen für automatische Erkennung)"
         }
       }
     },
@@ -28,6 +29,7 @@
         "data": {
           "main_scan_interval": "Haupt-Abfrageintervall (Sekunden)",
           "energy_scan_interval": "Energie-Abfrageintervall (Sekunden)",
+          "n_heating_circuits": "Heizkreise",
           "enable_write_entities": "Schreib-Entitäten aktivieren",
           "enable_energy_sensors": "Energiesensoren aktivieren",
           "enable_advanced_sensors": "Erweiterte Sensoren aktivieren"

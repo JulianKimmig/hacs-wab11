@@ -12,7 +12,7 @@ environments used to investigate lifecycle behavior must also use Python 3.13
 and be freshly resolved from `requirements_test.txt`; reusing a Python 3.12
 environment can retain an older Home Assistant config-entry state machine.
 [`requirements_test.txt`](../../requirements_test.txt) installs the Home
-Assistant custom-component test plugin and the same `wab11==0.1.0` version
+Assistant custom-component test plugin and the same `wab11==0.2.0` version
 pinned by the component manifest. The commands mirrored by CI are:
 
 ```bash
@@ -33,6 +33,15 @@ connection in [`tests/conftest.py`](../../tests/conftest.py), using
 [`tests/fixtures/fake_system.json`](../../tests/fixtures/fake_system.json).
 The implementation-to-test mapping is maintained in
 [`../code-relationships.md`](../code-relationships.md).
+
+Circuit-count integration behavior is exercised by
+[`tests/test_config_flow.py`](../../tests/test_config_flow.py), which covers an
+explicit setup value, omission with detected-count persistence, and editing the
+effective count through options. [`tests/test_init.py`](../../tests/test_init.py)
+verifies that entry setup constructs the runtime library client with the
+effective persisted value. The upstream probing and Modbus exception-code
+rules are tested in the base package and documented in its
+[`heating-circuit discovery contract`](../../../../.docs/contracts/heating-circuit-discovery.md).
 
 `requirements_dev.txt` adds Home Assistant, Ruff, and mypy for broader local
 development. The repository also has a separate

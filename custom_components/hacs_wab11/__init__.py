@@ -18,6 +18,7 @@ from .const import (
     CONF_ENABLE_WRITE_ENTITIES,
     CONF_ENERGY_SCAN_INTERVAL,
     CONF_MAIN_SCAN_INTERVAL,
+    CONF_N_HEATING_CIRCUITS,
     CONF_UNIT_ID,
     DEFAULT_HOT_WATER_PUSH_MINUTES,
     DOMAIN,
@@ -190,6 +191,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host=entry.data["host"],
         port=entry.data["port"],
         unit_id=entry.data[CONF_UNIT_ID],
+        n_heating_circuits=entry.options.get(
+            CONF_N_HEATING_CIRCUITS,
+            entry.data.get(CONF_N_HEATING_CIRCUITS),
+        ),
         main_scan_interval=entry.options.get(
             CONF_MAIN_SCAN_INTERVAL,
             15,
