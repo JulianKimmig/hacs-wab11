@@ -67,13 +67,14 @@ You should also verify that existing [tests](./tests) are still working
 and you are encouraged to add new ones.
 You can run the tests using the following commands from the root folder:
 
+Use Python 3.14 to match the CI/Home Assistant test stack.
+
 ```bash
-Use Python 3.13 to match the CI/Home Assistant test stack.
 # Create a virtual environment
-python3.13 -m venv venv
+python3.14 -m venv venv
 source venv/bin/activate
 # Install requirements
-pip install -r requirements_dev.txt
+python -m pip install -r requirements_test.txt
 # Run tests and get a summary of successes/failures and code coverage
 pytest --durations=10 --cov-report term-missing --cov=custom_components.hacs_wab11 tests
 ```

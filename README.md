@@ -85,7 +85,7 @@ Remove the config entry from `Settings -> Devices & services`, then uninstall `W
 
 ## Development
 
-Use Python `3.13` to match the CI and Home Assistant test stack.
+Use Python `3.14` to match the CI and Home Assistant test stack.
 
 ```bash
 python -m pip install -r requirements_test.txt

@@ -7,13 +7,14 @@ in [`../ARCHITECTURE.md`](../ARCHITECTURE.md) and
 
 ## Local validation
 
-The repository targets Python 3.13 for its CI/Home Assistant test stack. Local
-environments used to investigate lifecycle behavior must also use Python 3.13
-and be freshly resolved from `requirements_test.txt`; reusing a Python 3.12
+The repository targets Python 3.14 for its CI/Home Assistant test stack. Local
+environments used to investigate lifecycle behavior must also use Python 3.14
+and be freshly resolved from `requirements_test.txt`; reusing an older Python
 environment can retain an older Home Assistant config-entry state machine.
-[`requirements_test.txt`](../../requirements_test.txt) installs the Home
-Assistant custom-component test plugin and the same `wab11==0.2.0` version
-pinned by the component manifest. The commands mirrored by CI are:
+[`requirements_test.txt`](../../requirements_test.txt) pins the Home Assistant
+custom-component test plugin to the version corresponding to the tested Home
+Assistant release and installs the same `wab11==0.2.0` version pinned by the
+component manifest. The commands mirrored by CI are:
 
 ```bash
 python -m pip install -r requirements_test.txt
@@ -66,7 +67,7 @@ All three validation workflows run on every pull request and on pushes to
 `main`:
 
 1. [`ci.yaml`](../../.github/workflows/ci.yaml) checks out the repository, uses
-   Python 3.13, installs `requirements_test.txt`, and runs Ruff lint, import,
+   Python 3.14, installs `requirements_test.txt`, and runs Ruff lint, import,
    formatting, mypy, and pytest gates.
 2. [`hacs.yaml`](../../.github/workflows/hacs.yaml) runs `hacs/action@main` in
    the `integration` category. It ignores the repository description and topic
