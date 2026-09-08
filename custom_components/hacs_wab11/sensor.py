@@ -58,6 +58,7 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
         state_class: SensorStateClass | None = None,
         force_update: bool = False,
         enabled_default: bool = True,
+        suggested_display_precision: int | None = None,
     ) -> None:
         super().__init__(coordinator, entry, runtime_data, key, name)
         self._value_fn = value_fn
@@ -68,9 +69,15 @@ class Wab11Sensor(Wab11CoordinatorEntity, SensorEntity):
         self._attr_state_class = state_class
         self._attr_force_update = force_update
         self._attr_entity_registry_enabled_default = enabled_default
+        self._attr_suggested_display_precision = suggested_display_precision
 
     @property
     def native_value(self) -> Any:
+        """Return the native value, or None before evaluating unavailable data."""
+        if self._available_fn is not None and not self._available_fn(
+            self.coordinator.data
+        ):
+            return None
         return self._value_fn(self.coordinator.data)
 
     @property
@@ -244,11 +251,13 @@ def _sensor_from_description(
         key=description.key,
         name=description.name,
         value_fn=description.value,
+        available_fn=description.available,
         device_class=description.device_class,
         native_unit=description.native_unit,
         state_class=description.state_class,
         force_update=description.force_update,
         enabled_default=description.enabled_default,
+        suggested_display_precision=description.suggested_display_precision,
     )
 
 
