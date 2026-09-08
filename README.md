@@ -16,7 +16,7 @@ Write entities are disabled by default. The first release scope intentionally ex
 4. Restart Home Assistant.
 5. Add the integration from `Settings -> Devices & services`.
 
-The integration installs the published `wab11==0.2.0` library from PyPI and requires Home Assistant 2025.1.0 or newer.
+The integration installs the published `wab11==0.3.0` library from PyPI and requires Home Assistant 2025.1.0 or newer.
 
 ## Configuration
 
@@ -45,7 +45,7 @@ Read-only entities include:
 - SG-Ready state
 - Secondary-heat activity
 - Optional advanced heat-pump temperatures
-- Optional energy totals
+- Optional legacy thermal energy totals and separate electrical energy counters
 
 Writable entities include:
 
@@ -66,6 +66,27 @@ Custom service actions:
 The main controller state is polled every 15 seconds by default. Energy statistics are polled every 300 seconds by default. Both intervals can be increased in the integration options. When the controller is temporarily unavailable, Home Assistant marks coordinator entities unavailable and retries on the next scheduled update.
 
 ## Known Limitations
+
+With energy sensors enabled, `electrical_energy_today`,
+`electrical_energy_yesterday`, `electrical_energy_month`, and
+`electrical_energy_year` expose the optional electrical readings in integer
+kWh. These share the existing energy polling interval. Unsupported registers
+make only the electrical sensors unavailable; a valid zero is displayed as
+zero, and supported readings recover automatically on later polls.
+
+All 16 legacy energy sensors keep their existing identities and readings.
+`estimated_total_power` still derives from the legacy total-energy counters;
+it is not measured electrical input power. Existing history is not relabeled.
+Today/month/year electrical sensors use total-increasing statistics, while
+yesterday is a completed-day value without a statistics state class. The
+periods overlap and should not be summed.
+
+Electrical register mapping is empirical and can depend on firmware. Exact
+included electrical loads, agreement with the controller display, and rollover
+behavior require device-specific validation. See the
+[Home Assistant sensor documentation](https://developers.home-assistant.io/docs/core/entity/sensor/)
+for statistics state-class semantics. This code update does not change a live
+Home Assistant or InfluxDB deployment.
 
 - Communication uses unauthenticated, unencrypted Modbus TCP and must remain on an isolated network.
 - Automatic network discovery is not available; the controller address must be entered manually.

@@ -64,6 +64,8 @@ class ConfigBackedFakeConnection:
         self.writes: list[tuple[int, int]] = []
         self.is_connected = True
         self.read_error: WAB11Error | None = None
+        self.input_errors: dict[int, WAB11Error] = {}
+        self.input_reads: list[tuple[int, int]] = []
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> ConfigBackedFakeConnection:
@@ -86,6 +88,10 @@ class ConfigBackedFakeConnection:
         self.is_connected = False
 
     async def read_input_registers(self, address: int, count: int = 1) -> list[int]:
+        """Read a fixture block or raise its explicitly configured device error."""
+        self.input_reads.append((address, count))
+        if address in self.input_errors:
+            raise self.input_errors[address]
         return self._read_block(
             self.input_blocks, address, count, register_type="input"
         )
